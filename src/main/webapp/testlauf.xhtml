@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Testläufe verwalten</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0; padding: 0;
+        }
+        .header {
+            background-color: #003366;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #005b99;
+            color: white;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 10px 20px;
+            margin-top: 20px;
+        }
+        .form-actions {
+            margin-top: 20px;
+        }
+        .button {
+            background-color: #005b99;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #004070;
+        }
+        .small-note {
+            font-size: small;
+            color: gray;
+        }
+        .error {
+            color: red;
+        }
+        .back-button {
+            margin-top: 40px;
+            display: inline-block;
+        }
+    </style>
+</h:head>
+
+<h:body>
+    <div class="header">
+        <h1>Testlaufverwaltung</h1>
+        <p>Verwalten und Planen von Testläufen</p>
+    </div>
+
+    <div class="container">
+        <h2>Alle Testläufe</h2>
+        <h:form>
+            <h:dataTable value="#{testlaufBean.testlaeufe}" var="t">
+                <h:column>
+                    <f:facet name="header">Name</f:facet>
+                    #{t.name}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Datum</f:facet>
+                    <h:outputText value="#{t.datum}">
+                        <f:convertDateTime pattern="dd.MM.yyyy" />
+                    </h:outputText>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Tester:in</f:facet>
+                    #{t.tester != null ? t.tester.name : '–'}
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Testfälle</f:facet>
+                    <ui:repeat var="tf" value="#{t.testfaelle}">
+                        #{tf.titel}<br/>
+                    </ui:repeat>
+                </h:column>
+                <h:column>
+                    <f:facet name="header">Anforderungen</f:facet>
+                    <ui:repeat var="tf" value="#{t.testfaelle}" varStatus="s">
+                        #{tf.anforderung.titel}#{!s.last ? ', ' : ''}
+                    </ui:repeat>
+                </h:column>
+            </h:dataTable>
+        </h:form>
+
+        <h2>Neuen Testlauf anlegen</h2>
+        <h:form>
+            <div class="form-grid">
+                <h:outputLabel for="name" value="Name:" />
+                <h:inputText id="name"
+                             value="#{testlaufBean.neuerTestlauf.name}"
+                             required="true" />
+
+                <h:outputLabel for="datum" value="Datum (TT.MM.JJJJ):" />
+                <h:panelGroup>
+                    <h:inputText id="datum"
+                                 value="#{testlaufBean.neuerTestlauf.datum}"
+                                 required="true">
+                        <f:convertDateTime pattern="dd.MM.yyyy" />
+                    </h:inputText>
+                    <h:message for="datum" styleClass="error"/>
+                    <h:outputText value="Beispiel: 12.07.2025"
+                                  styleClass="small-note" />
+                </h:panelGroup>
+
+                <h:outputLabel value="Testfälle auswählen:"/>
+                <h:panelGroup layout="block">
+                    <h:selectManyCheckbox value="#{testlaufBean.ausgewaehlteTestfallIds}" layout="pageDirection">
+                        <f:selectItems value="#{testlaufBean.alleTestfaelle}"
+                                       var="tf"
+                                       itemValue="#{tf.id}"
+                                       itemLabel="#{tf.titel}" />
+                    </h:selectManyCheckbox>
+                </h:panelGroup>
+
+                <h:outputLabel value="Tester:in auswählen:"/>
+                <h:panelGroup layout="block">
+                    <h:selectOneMenu value="#{testlaufBean.testerId}" required="true" style="width: 100%;">
+                        <f:selectItem itemLabel="Bitte auswählen"
+                                      itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{testlaufBean.alleTester}"
+                                       var="b"
+                                       itemValue="#{b.id}"
+                                       itemLabel="#{b.name}" />
+                    </h:selectOneMenu>
+                </h:panelGroup>
+            </div>
+
+            <div class="form-actions">
+                <h:commandButton value="Speichern"
+                                 action="#{testlaufBean.speichern}"
+                                 styleClass="button" />
+            </div>
+        </h:form>
+
+        <h:form>
+            <h:commandLink action="overview?faces-redirect=true"
+                           styleClass="back-button">
+                <button type="button" class="button">
+                    Zurück zur Übersicht
+                </button>
+            </h:commandLink>
+        </h:form>
+    </div>
+</h:body>
+</html>
+
+
+
